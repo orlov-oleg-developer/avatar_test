@@ -1,8 +1,12 @@
-/** @jsxImportSource @emotion/react */
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, TouchEvent, ReactNode } from 'react'
 import styled from '@emotion/styled'
 
-const Card = styled.div`
+interface SwipeableCardProps {
+  onSwipeLeft?: () => void
+  children: ReactNode
+}
+
+const Card = styled.div<{ dismissed: boolean }>`
   transition: transform 0.3s ease, opacity 0.3s ease;
   background: white;
   border-radius: 12px;
@@ -13,31 +17,32 @@ const Card = styled.div`
   opacity: ${(props) => (props.dismissed ? 0 : 1)};
 `
 
-const SwipeableCard = ({ onSwipeLeft, children }) => {
-  const startX = useRef(0)
-  const [translateX, setTranslateX] = useState(0)
-  const [isSwiping, setIsSwiping] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
+const SwipeableCard: React.FC<SwipeableCardProps> = ({ onSwipeLeft, children }) => {
+  const startX = useRef<number>(0)
+  const [translateX, setTranslateX] = useState<number>(0)
+  const [isSwiping, setIsSwiping] = useState<boolean>(false)
+  const [dismissed, setDismissed] = useState<boolean>(false)
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
     startX.current = e.touches[0].clientX
     setIsSwiping(true)
   }
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
     if (!isSwiping) return
     const deltaX = e.touches[0].clientX - startX.current
-    if (deltaX < 0) setTranslateX(deltaX) // только свайп влево
+    if (deltaX < 0) setTranslateX(deltaX) // только влево
   }
 
   const handleTouchEnd = () => {
     setIsSwiping(false)
+
     if (translateX < -100) {
       setTranslateX(-window.innerWidth) // уводим влево
       setDismissed(true)
       onSwipeLeft?.()
     } else {
-      setTranslateX(0) // возвращаем
+      setTranslateX(0) // возвращаем обратно
     }
   }
 
